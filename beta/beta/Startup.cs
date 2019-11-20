@@ -43,12 +43,14 @@ namespace beta
             //for dependancy injection and IoC
             services.AddScoped<IRepository, Repository>();
 
+            //for injection of the SB-event listener
+            services.AddSingleton<IServiceBusConsumer, ServiceBusConsumer>();
+            
+
             //for PostgreSQL
             //get the connection string and from User Secrets and use the string to connect to the postgre database
             services.AddDbContext<DataAccess.Entities.NumDBContext>(options =>
-                options.UseNpgsql(Configuration.GetConnectionString("ElephantDB")));
-
-
+                options.UseNpgsql(Configuration.GetConnectionString("ElephantDB2")));
 
         }
 
@@ -72,6 +74,15 @@ namespace beta
             {
                 endpoints.MapControllers();
             });
+
+
+            //for the service-bus listener
+            //define the event-listener
+            var bus = app.ApplicationServices.GetService<IServiceBusConsumer>();
+
+            //start listening
+            bus.RegisterOnMessageHandlerAndReceiveMessages();
+
         }
     }
 }
