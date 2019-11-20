@@ -20,14 +20,20 @@ namespace alpha.Controllers
     public class NumberController : ControllerBase
     {
 
-        //stores the database reference
+        //stores the database reference: injected
         private readonly IRepository _repository;
 
+        //stores the service-bus sender: injected
+        private readonly ServiceBusSender _serviceBusSender;
+
         //injection defined in constructor
-        public NumberController(IRepository repository)
+        public NumberController(IRepository repository, ServiceBusSender serviceBusSender)
         {
-            //here
+            //inject the repository reference
             _repository = repository;
+
+            //inject the service-bus sender
+            _serviceBusSender = serviceBusSender;
         }
 
         // GET: api/Number //works
@@ -81,6 +87,31 @@ namespace alpha.Controllers
             catch(Exception e)
             {
                 string danger = "The database was unable to post for... reasons. : " + e.Message;
+                return StatusCode(StatusCodes.Status500InternalServerError, danger);
+            }
+        }
+
+        // POST: api/Number / send a number to the Database AND the service bus
+        [HttpPost("toSBandDB/{num}")]
+        public async Task<ActionResult<object>> PosttoSB(int num)
+        {
+            try
+            {
+                //declare the Number
+                BusinessLogic.Number numbr = new BusinessLogic.Number(num);
+
+                //put it in the db.
+                await _repository.PlaceNumberAsync(numbr );
+
+                //then put a message into the service bus
+                await _serviceBusSender.SendMessage( numbr );
+
+                return Ok();
+            }
+
+            catch (Exception e)
+            {
+                string danger = "The database was unable to post to DB for... reasons. : " + e.Message;
                 return StatusCode(StatusCodes.Status500InternalServerError, danger);
             }
         }

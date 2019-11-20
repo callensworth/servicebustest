@@ -17,6 +17,9 @@ using Microsoft.Extensions.Logging;
 using alpha.DataAccess;
 using alpha.BusinessLogic;
 
+using Newtonsoft.Json;
+
+
 namespace alpha
 {
     public class Startup
@@ -42,6 +45,13 @@ namespace alpha
 
             //for dependancy injection and IoC
             services.AddScoped<IRepository, Repository>();
+
+            //for Json
+            //services.AddMvc().AddNewtonsoftJson();
+
+            //for Service Bus
+            services.AddScoped<ServiceBusSender>();
+
 
             //for PostgreSQL
             //get the connection string and from User Secrets and use the string to connect to the postgre database
